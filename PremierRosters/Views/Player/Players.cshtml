@@ -85,7 +85,8 @@
                     @Html.DisplayFor(modelItem => player.TeamString)
                 </td>
                 <td>
-                    @Html.ActionLink("Delete", "Delete", new { id = player.ID })
+                    @Html.ActionLink("Delete", "Delete", new { id = player.ID }) |
+                    @Html.ActionLink("Edit", "Edit", new { id = player.ID })
                 </td>
             </tr>
         }

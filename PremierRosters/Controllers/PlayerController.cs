@@ -148,6 +148,21 @@ namespace PremierRosters.Controllers
             return View(pi);
         }
 
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            PlayerMethods pm = new PlayerMethods();
+            TeamMethods tm = new TeamMethods();
+            MainModell md = new MainModell
+            {
+                teamInfo = tm.GetTeams(out string tError),
+                playerInfo = pm.GetPlayer(id, out string error)
+            };
+            
+            ViewData["ID"] = id;
+            ViewBag.error = error;
+            return View(md);
+        }
 
     }
 }
