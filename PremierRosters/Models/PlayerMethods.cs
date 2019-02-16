@@ -47,7 +47,7 @@ namespace PremierRosters.Models
             }
         }
         
-        public List<PlayerInfo> GetPlayerInfo(out string error)
+        public List<PlayerInfo> GetPlayersInfo(out string error)
         {
             // SQL Connection created
             SqlConnection sConnection = new SqlConnection
@@ -94,7 +94,56 @@ namespace PremierRosters.Models
                 sConnection.Close();
             }
         }
-   
+
+        public List<PlayerInfo> GetPlayersInfo(int id, out string error)
+        {
+            // SQL Connection created
+            SqlConnection sConnection = new SqlConnection
+            {
+                ConnectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Fotboll;Integrated Security=True"
+            };
+
+            // Query for getting teams
+            String sqlQuery = "SELECT Pl_ID AS ID, Pl_First_name AS [First name], Pl_Surname AS Surname, Pl_Position AS Position, Te_Name  AS Team From Tbl_Player INNER JOIN Tbl_Team ON Te_ID = Pl_Team WHERE Pl_Team = @Id";
+            SqlCommand sCommand = new SqlCommand(sqlQuery, sConnection);
+
+            sCommand.Parameters.Add("Id", SqlDbType.Int).Value = id;
+            SqlDataReader read = null;
+            List<PlayerInfo> playerList = new List<PlayerInfo>();
+
+            error = "";
+            try
+            {
+                sConnection.Open();
+                read = sCommand.ExecuteReader();
+
+                while (read.Read())
+                {
+                    PlayerInfo player = new PlayerInfo();
+                    player.FirstName = read["First Name"].ToString();
+                    player.Surname = read["Surname"].ToString();
+                    player.Position = read["Position"].ToString();
+                    player.TeamString = read["Team"].ToString();
+                    player.ID = Convert.ToInt32(read["ID"]);
+                    playerList.Add(player);
+                }
+                read.Close();
+                return playerList;
+            }
+            catch (Exception e)
+            {
+                PlayerInfo player = new PlayerInfo();
+                player.FirstName = "Error";
+                playerList.Add(player);
+                error = e.Message;
+                return playerList;
+            }
+            finally
+            {
+                sConnection.Close();
+            }
+        }
+
         public int DeletePlayer(int id, out string error)
         {
             // SQL Connection created
@@ -175,6 +224,91 @@ namespace PremierRosters.Models
                 
                 error = e.Message +" "+  id;
                 return player;
+            }
+            finally
+            {
+                sConnection.Close();
+            }
+        }
+
+        public List<PlayerInfo> SearchPlayersInfo(int id, string type, string search, out string error)
+        {
+            // SQL Connection created
+            SqlConnection sConnection = new SqlConnection
+            {
+                ConnectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Fotboll;Integrated Security=True"
+            };
+            String sqlQuery;
+            SqlCommand sCommand;
+            search = "%" + search + "%";
+            if (id > 0)
+            {
+                if(type == "Name")
+                {
+                    sqlQuery = "SELECT Pl_ID AS ID, Pl_First_name AS [First name], Pl_Surname AS Surname, Pl_Position AS Position, "+
+                        "Te_Name  AS Team From Tbl_Player INNER JOIN Tbl_Team ON Te_ID = Pl_Team WHERE Pl_Team = @Id AND Pl_Surname LIKE @Search;";
+                    
+                }
+                else
+                {
+                    sqlQuery = "SELECT Pl_ID AS ID, Pl_First_name AS [First name], Pl_Surname AS Surname, Pl_Position AS Position, "+
+                        "Te_Name  AS Team From Tbl_Player INNER JOIN Tbl_Team ON Te_ID = Pl_Team WHERE Pl_Team = @Id AND Pl_Position LIKE @Search;";
+                    
+
+                }
+                sCommand = new SqlCommand(sqlQuery, sConnection);
+                
+                sCommand.Parameters.Add("Id", SqlDbType.Int).Value = id;
+                sCommand.Parameters.Add("Search", SqlDbType.NVarChar, 50).Value = search;
+            }
+            else
+            {
+                if(type == "Name")
+                {
+                    sqlQuery = "SELECT Pl_ID AS ID, Pl_First_name AS [First name], Pl_Surname AS Surname, Pl_Position AS Position,"+
+                        "Te_Name  AS Team From Tbl_Player INNER JOIN Tbl_Team ON Te_ID = Pl_Team WHERE Pl_Surname LIKE @search;";
+                }
+                else
+                {
+                    sqlQuery = "SELECT Pl_ID AS ID, Pl_First_name AS [First name], Pl_Surname AS Surname, Pl_Position AS Position, "+
+                        "Te_Name  AS Team From Tbl_Player INNER JOIN Tbl_Team ON Te_ID = Pl_Team WHERE Pl_Position LIKE @search;";
+                }
+                sCommand = new SqlCommand(sqlQuery, sConnection);
+                sCommand.Parameters.Add("search", SqlDbType.NVarChar, 50).Value = search;
+
+
+            }
+            
+            SqlDataReader read = null;
+            List<PlayerInfo> playerList = new List<PlayerInfo>();
+
+            error = "";
+            try
+            {
+                sConnection.Open();
+                read = sCommand.ExecuteReader();
+
+                while (read.Read())
+                {
+                    PlayerInfo player = new PlayerInfo();
+                    player.FirstName = read["First Name"].ToString();
+                    player.Surname = read["Surname"].ToString();
+                    player.Position = read["Position"].ToString();
+                    player.TeamString = read["Team"].ToString();
+                    player.ID = Convert.ToInt32(read["ID"]);
+                    playerList.Add(player);
+                }
+                read.Close();
+                
+                return playerList;
+            }
+            catch (Exception e)
+            {
+                PlayerInfo player = new PlayerInfo();
+                player.FirstName = "Error";
+                playerList.Add(player);
+                error = e.Message;
+                return playerList;
             }
             finally
             {

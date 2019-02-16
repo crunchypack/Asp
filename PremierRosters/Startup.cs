@@ -57,7 +57,7 @@ namespace PremierRosters
             {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Player}/{action=Players}/{id?}");
+                    template: "{controller=Player}/{action=Teams}/{id?}");
             });
         }
     }

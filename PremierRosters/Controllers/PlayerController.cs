@@ -51,15 +51,80 @@ namespace PremierRosters.Controllers
             return View(teamList);
         }
         [HttpGet]
-        public IActionResult Players()
+        public IActionResult Players(string sortOrder)
         {
             PlayerMethods playerM = new PlayerMethods();
-            List<PlayerInfo> players = new List<PlayerInfo>();
-            players = playerM.GetPlayerInfo(out string error);
-            ViewBag.error = error;
-            return View(players);
+            TeamMethods tm = new TeamMethods();
+            Filter f = new Filter
+            {
+                playerInfo = playerM.GetPlayersInfo(out string error),
+                teamInfo = tm.GetTeams(out string tError)
+            };
+            ViewBag.sort = sortOrder;
+            ViewData["SortFirst"] = String.IsNullOrEmpty(sortOrder) ? "fNameSort_Desc" : "";
+            ViewData["SortSur"] = sortOrder == "sName_Asc" ? "sName_Desc" : "sName_Asc";
+            ViewData["SortPos"] = sortOrder == "Pos_Asc" ? "Pos_Desc" : "Pos_Asc";
+            ViewData["SortTeam"] = sortOrder == "Team_Asc" ? "Team_Desc" : "Team_Asc";
+            switch (sortOrder)
+            {
+                case "Pos_Asc":
+                    f.playerInfo = f.playerInfo.OrderBy(x => x.Position).ToList();
+                    break;
+                case "Pos_Desc":
+                    f.playerInfo = f.playerInfo.OrderByDescending(x => x.Position).ToList();
+                    break;
+                case "Team_Asc":
+                    f.playerInfo = f.playerInfo.OrderBy(x => x.TeamString).ToList();
+                    break;
+                case "Team_Desc":
+                    f.playerInfo = f.playerInfo.OrderByDescending(x => x.TeamString).ToList();
+                    break;
+                case "sName_Asc":
+                    f.playerInfo = f.playerInfo.OrderBy(x => x.Surname).ToList();
+                    break;
+                case "sName_Desc":
+                    f.playerInfo = f.playerInfo.OrderByDescending(x => x.Surname).ToList();
+                    break;
+                case "fNameSort_Desc":
+                    f.playerInfo = f.playerInfo.OrderByDescending(x => x.FirstName).ToList();
+                    break;
+                default:
+                    f.playerInfo = f.playerInfo.OrderBy(x => x.FirstName).ToList();
+                    break;
+            }
+           // f.playerInfo = f.playerInfo.OrderBy(x => x.Surname).ToList();
+            ViewBag.error ="player: "+ error + " team: "+ tError;
+            return View(f);
         }
+        [HttpPost]
+        public IActionResult Players(int team,string search, int filter, string type,string sortOrder)
+        {
+            
+            PlayerMethods pm = new PlayerMethods();
+            TeamMethods tm = new TeamMethods();
+            Filter f = new Filter();
+            string error;
+            f.teamInfo = tm.GetTeams(out string tError);
+            if (String.IsNullOrEmpty(search) || team == -1)
+            {
+                if (team == -1) f.playerInfo = pm.GetPlayersInfo(out error);
+                else f.playerInfo = pm.GetPlayersInfo(team, out error);
+                
+            }
+            else
+            {
+                f.playerInfo = pm.SearchPlayersInfo(filter, type, search, out error);
+            }
+            f.playerInfo = f.playerInfo.OrderBy(x => x.Surname).ToList();
+            ViewData["ID"] = team;
+            ViewData["Filter"] = filter;
+            
+            //ViewData["Stuff"] = "Stuff: " + search + " " + type + " " + filter;
+            //ViewBag.error = "player: " + error + " team: " + tError + " ID: " + team;
 
+            
+            return View(f);
+        }
         [HttpGet]
         public IActionResult Delete(int id)
         {
@@ -77,7 +142,6 @@ namespace PremierRosters.Controllers
             PlayerMethods pm = new PlayerMethods();
             int id = pi.ID;
             int i = pm.DeletePlayer(id, out string error);
-            ViewData["ID"] = id;
             ViewBag.error = error;
             if (i == 1) return RedirectToAction("Players");
             else

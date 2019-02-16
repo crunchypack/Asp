@@ -42,7 +42,7 @@
                 <select asp-for="playerInfo.Team" class="form-control" >
                     @foreach(PremierRosters.Models.TeamInfo team in Model.teamInfo)
                     {
-                        <option value=" @Html.DisplayFor(modelItem => team.ID) ">@Html.DisplayFor(modelItem => team.Name)</option>
+                        <option value="@team.ID">@Html.DisplayFor(modelItem => team.Name)</option>
                     }
                 </select>
                 <span asp-validation-for="playerInfo.Team" class="text-danger"></span>
