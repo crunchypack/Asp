@@ -2,11 +2,12 @@
 
 @{
     ViewData["Title"] = "Edit";
+    int teamId = Model.playerInfo.Team;
 }
 
 <h1>Edit</h1>
-
-<h4>PlayerInfo</h4>
+<p>@ViewBag.error</p>
+<h4>Player</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
@@ -42,7 +43,7 @@
                 <select asp-for="playerInfo.Team" class="form-control">
                     @foreach (PremierRosters.Models.TeamInfo team in Model.teamInfo)
                     {
-                        if (Model.playerInfo.Team == team.ID)
+                        if (teamId == team.ID)
                         {
                             <option value="@team.ID" selected>@Html.DisplayFor(modelItem => team.Name) </option>
                         }
@@ -53,6 +54,11 @@
                     }
                 </select>
                 <span asp-validation-for="playerInfo.Team" class="text-danger"></span>
+            </div>
+            <div class="form-group" style="visibility: hidden">
+                <label asp-for="playerInfo.ID" class="control-label"></label>
+                <input asp-for="playerInfo.ID" class="form-control" />
+                <span asp-validation-for="playerInfo.ID" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />

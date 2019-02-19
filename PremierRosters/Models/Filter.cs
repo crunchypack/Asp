@@ -9,5 +9,7 @@ namespace PremierRosters.Models
     {
         public IEnumerable<TeamInfo> teamInfo { get; set; }
         public IEnumerable <PlayerInfo> playerInfo{ get; set; }
+        public IEnumerable<SponsorInfo> sponsors { get; set; }
+        public PlayerSponsorBy SpPl { get; set; }
     }
 }

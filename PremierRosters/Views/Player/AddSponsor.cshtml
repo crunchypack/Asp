@@ -1,0 +1,39 @@
+﻿@model PremierRosters.Models.Filter
+
+@{
+    ViewData["Title"] = "AddSponsor";
+}
+
+<h1>Add Sponsor to player</h1>
+
+<h4>Pick Sponsor</h4>
+<p>@ViewBag.error</p><p>@ViewBag.exist</p>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="AddPlayerToSp">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="SpPl.Sponsor" class="control-label"></label>
+                <select asp-for="SpPl.Sponsor" class="form-control" id="SponsorID" name="SponsorID">
+                    @foreach (PremierRosters.Models.SponsorInfo sponsor in Model.sponsors)
+                    {
+                        <option value="@sponsor.ID">@Html.DisplayFor(modelItem => sponsor.Name)</option>
+                    }
+                </select>
+                <span asp-validation-for="SpPl.Sponsor" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Submit" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Sponsors">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

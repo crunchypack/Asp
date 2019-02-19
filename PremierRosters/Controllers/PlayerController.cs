@@ -9,10 +9,6 @@ namespace PremierRosters.Controllers
 {
     public class PlayerController : Controller
     {
-        public IActionResult Index()
-        {
-            return View();
-        }
         [HttpGet]
         public IActionResult InsertPlayer()
         {
@@ -58,7 +54,9 @@ namespace PremierRosters.Controllers
             Filter f = new Filter
             {
                 playerInfo = playerM.GetPlayersInfo(out string error),
-                teamInfo = tm.GetTeams(out string tError)
+                teamInfo = tm.GetTeams(out string tError),
+                sponsors = playerM.GetSponsors(out string sError),
+                SpPl = null
             };
             ViewBag.sort = sortOrder;
             ViewData["SortFirst"] = String.IsNullOrEmpty(sortOrder) ? "fNameSort_Desc" : "";
@@ -105,6 +103,8 @@ namespace PremierRosters.Controllers
             Filter f = new Filter();
             string error;
             f.teamInfo = tm.GetTeams(out string tError);
+            f.sponsors = pm.GetSponsors(out string sError);
+            f.SpPl = null;
             if (String.IsNullOrEmpty(search) || team == -1)
             {
                 if (team == -1) f.playerInfo = pm.GetPlayersInfo(out error);
@@ -118,6 +118,7 @@ namespace PremierRosters.Controllers
             f.playerInfo = f.playerInfo.OrderBy(x => x.Surname).ToList();
             ViewData["ID"] = team;
             ViewData["Filter"] = filter;
+            ViewData["Search"] = search;
             
             //ViewData["Stuff"] = "Stuff: " + search + " " + type + " " + filter;
             //ViewBag.error = "player: " + error + " team: " + tError + " ID: " + team;
@@ -158,10 +159,106 @@ namespace PremierRosters.Controllers
                 teamInfo = tm.GetTeams(out string tError),
                 playerInfo = pm.GetPlayer(id, out string error)
             };
-            
             ViewData["ID"] = id;
             ViewBag.error = error;
             return View(md);
+        }
+        [HttpPost]
+        public IActionResult Edit(MainModell main)
+        {
+            PlayerMethods pm = new PlayerMethods();
+            TeamMethods tm = new TeamMethods();
+            main.teamInfo = tm.GetTeams(out string tError);
+            int i = pm.UpdatePlayer(main.playerInfo, out string error);
+            ViewBag.error = error + ".\n Player Name: " + main.playerInfo.FirstName+ "\nPlayerID: " + main.playerInfo.ID;
+
+            if (i == 1) return RedirectToAction("Players");
+            else
+                return View(main);
+        }
+        public IActionResult Sponsors()
+        {
+            PlayerMethods pm = new PlayerMethods();
+            List<SponsorInfo> si = new List<SponsorInfo>();
+            si = pm.GetSponsors(out string error);
+
+            foreach(var sponsor in si)
+            {
+                sponsor.Players = pm.GetSponsorsPlayers(sponsor.ID, out string error2);
+            }
+            ViewBag.error = error;
+
+            return View(si);
+        }
+        [HttpGet]
+        public IActionResult AddSponsor()
+        {
+            PlayerMethods pm = new PlayerMethods();
+            Filter filter = new Filter
+            {
+                playerInfo = pm.GetPlayersInfo(out string pError),
+                sponsors = pm.GetSponsors(out string sError),
+                teamInfo = null,
+                SpPl = new PlayerSponsorBy()
+            };
+            filter.SpPl.SponsoredBy = pm.GetRelations(out string reError);
+            ViewBag.error = reError;
+            return View(filter);
+        }
+        [HttpPost]
+        public IActionResult AddPlayerToSp(int SponsorID)
+        {
+            PlayerMethods pm = new PlayerMethods();
+            PlayerSponsorBy player = new PlayerSponsorBy();
+            List<PlayerInfo> players = pm.GetPlayersInfo(out string pError);
+            Filter filter = new Filter
+            {
+                sponsors = pm.GetSponsors(out string sError),
+                teamInfo = null,
+                SpPl = new PlayerSponsorBy()
+            };
+            filter.SpPl.SponsoredBy = pm.GetRelations(out string reError);
+            var result = filter.SpPl.SponsoredBy.Where(kv => kv.Key == SponsorID);
+            foreach (PlayerInfo p in players.ToList())
+            {
+                foreach (KeyValuePair<int, int> kvp in result)
+                {
+                    if (kvp.Value == p.ID)
+                    {
+                        var remove = players.SingleOrDefault(x => x.ID == p.ID);
+                        if (remove != null) players.Remove(remove);
+                    }
+
+                }
+            }
+            filter.playerInfo = players;
+            ViewBag.error = pError + " "+ reError;
+            ViewData["ID"] = SponsorID;
+            return View(filter);
+        }
+
+        [HttpPost]
+        public IActionResult CreateRelation(Filter filter)
+        {
+            filter.playerInfo = null;
+            filter.sponsors = null;
+            PlayerMethods pm = new PlayerMethods();
+            int i = pm.InsertSpRelation(filter.SpPl, out string error);
+            ViewBag.error = error;
+            ViewBag.player = filter.SpPl.Player;
+            ViewBag.sponsor = filter.SpPl.Sponsor;
+            if (i == 1) return RedirectToAction("Sponsors");
+            else
+                return View();
+        }
+        [HttpGet]
+        public IActionResult Details(int id)
+        {
+            PlayerMethods pm = new PlayerMethods();
+            PlayerInfo pi = new PlayerInfo();
+            pi = pm.GetPlayer(id, out string error);
+
+            return View(pi);
         }
 
     }

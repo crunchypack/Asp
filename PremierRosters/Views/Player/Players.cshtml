@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Players";
+    string filter = ViewData["Search"] as string;
 }
 
 <h1>Players</h1>
@@ -34,7 +35,16 @@
     </form>
     <form asp-action="Players">
         <div class="form-group">
-            <input type="text" id="search" name="search" />
+            @if (!String.IsNullOrEmpty(filter))
+            {
+                <input type="text" id="search" name="search" value="@filter"/>
+
+            }
+            else
+            {
+                <input type="text" id="search" name="search" />
+
+            }
 
             @if (Convert.ToInt32(ViewData["ID"]) > 0 || Convert.ToInt32(ViewData["Filter"]) > 0)
             {
@@ -54,17 +64,45 @@
     <thead>
         <tr>
             <th>
-                @Html.ActionLink("First name", "Players", new { sortOrder = ViewData["SortFirst"] })
+                @if (Convert.ToInt32(ViewData["ID"]) > 0 || Convert.ToInt32(ViewData["Filter"] ) > 0 || !String.IsNullOrEmpty(filter))
+                {
+                    @Html.Raw("First name")
+                }
+                else
+                {
+                    @Html.ActionLink("First name", "Players", new { sortOrder = ViewData["SortFirst"] })
+                }
             </th>
             <th>
-                @Html.ActionLink("Surname", "Players", new { sortOrder = ViewData["Sortsur"] })
-            </th>
+                @if (Convert.ToInt32(ViewData["ID"]) > 0 || Convert.ToInt32(ViewData["Filter"]) > 0 || !String.IsNullOrEmpty(filter))
+                {
+                    @Html.Raw("Surname")
+                }
+                else
+                {
+                    @Html.ActionLink("Surname", "Players", new { sortOrder = ViewData["Sortsur"] })
+                }
+                </th>
             <th>
-                @Html.ActionLink("Position", "Players", new { sortOrder = ViewData["SortPos"] })
-            </th>
+                @if (Convert.ToInt32(ViewData["ID"]) > 0 || Convert.ToInt32(ViewData["Filter"]) > 0 || !String.IsNullOrEmpty(filter))
+                {
+                    @Html.Raw("Position")
+                }
+                else
+                {
+                    @Html.ActionLink("Position", "Players", new { sortOrder = ViewData["SortPos"] })
+                }
+                </th>
             <th>
-                @Html.ActionLink("Team", "Players", new { sortOrder = ViewData["SortTeam"] })
-            </th>
+                @if (Convert.ToInt32(ViewData["ID"]) > 0 || Convert.ToInt32(ViewData["Filter"]) > 0 || !String.IsNullOrEmpty(filter))
+                {
+                    @Html.Raw("Team")
+                }
+                else
+                {
+                    @Html.ActionLink("Team", "Players", new { sortOrder = ViewData["SortTeam"] })
+                }
+                </th>
             <th></th>
         </tr>
     </thead>
@@ -92,17 +130,3 @@
         }
     </tbody>
 </table>
-@section Scripts{
-    <script type="text/javascript">
-  $(function(){
-    $("a.postLink").click(function(e){
-      e.preventDefault();
-      $.post($(this).attr("href"),function(data){
-          // got the result in data variable. do whatever you want now
-          //may be reload the page
-          location.reload();
-      });
-    });
-  });
-    </script>
-}

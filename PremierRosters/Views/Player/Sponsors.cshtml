@@ -1,0 +1,41 @@
+﻿@model IEnumerable<PremierRosters.Models.SponsorInfo>
+
+@{
+    ViewData["Title"] = "Sponsors";
+}
+
+<h1>Sponsors</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th>
+                Players
+            </th>
+
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @foreach (KeyValuePair<string, int> keyValue in item.Players)
+                {
+                    int i = keyValue.Value;
+                    <a asp-action="Details" asp-route-id="@i"> @keyValue.Key</a>
+                }
+            </td>
+
+        </tr>
+}
+    </tbody>
+</table>
+<p>
+    <a asp-action="AddSponsor">Add sponsor to player</a>
+</p>
