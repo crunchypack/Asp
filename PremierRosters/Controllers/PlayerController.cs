@@ -9,6 +9,7 @@ namespace PremierRosters.Controllers
 {
     public class PlayerController : Controller
     {
+        // Create player form
         [HttpGet]
         public IActionResult InsertPlayer()
         {
@@ -22,6 +23,8 @@ namespace PremierRosters.Controllers
 
             return View(main);
         }
+        
+        // Get data to insert player to database
         [HttpPost]
         public IActionResult InsertPlayer(MainModell main)
         {
@@ -37,6 +40,8 @@ namespace PremierRosters.Controllers
             else
             return View(main);
         }
+        
+        // Show all teams
         [HttpGet]
         public IActionResult Teams()
         {
@@ -46,18 +51,22 @@ namespace PremierRosters.Controllers
             ViewBag.error = error;
             return View(teamList);
         }
+        
+        // Show all players
         [HttpGet]
         public IActionResult Players(string sortOrder)
         {
             PlayerMethods playerM = new PlayerMethods();
             TeamMethods tm = new TeamMethods();
+            string sortBy;
+            string error = "";
             Filter f = new Filter
             {
-                playerInfo = playerM.GetPlayersInfo(out string error),
                 teamInfo = tm.GetTeams(out string tError),
                 sponsors = playerM.GetSponsors(out string sError),
                 SpPl = null
             };
+            // Handle click on links to sort 
             ViewBag.sort = sortOrder;
             ViewData["SortFirst"] = String.IsNullOrEmpty(sortOrder) ? "fNameSort_Desc" : "";
             ViewData["SortSur"] = sortOrder == "sName_Asc" ? "sName_Desc" : "sName_Asc";
@@ -66,34 +75,44 @@ namespace PremierRosters.Controllers
             switch (sortOrder)
             {
                 case "Pos_Asc":
-                    f.playerInfo = f.playerInfo.OrderBy(x => x.Position).ToList();
+                    sortBy = "pos";
+                    f.playerInfo = playerM.GetPlayersInfo(sortBy, 0, out error);
                     break;
                 case "Pos_Desc":
-                    f.playerInfo = f.playerInfo.OrderByDescending(x => x.Position).ToList();
+                    sortBy = "pos";
+                    f.playerInfo = playerM.GetPlayersInfo(sortBy, 1, out error);
                     break;
                 case "Team_Asc":
-                    f.playerInfo = f.playerInfo.OrderBy(x => x.TeamString).ToList();
+                    sortBy = "team";
+                    f.playerInfo = playerM.GetPlayersInfo(sortBy, 0, out error);
                     break;
                 case "Team_Desc":
-                    f.playerInfo = f.playerInfo.OrderByDescending(x => x.TeamString).ToList();
+                    sortBy = "team";
+                    f.playerInfo = playerM.GetPlayersInfo(sortBy, 1, out error);
                     break;
                 case "sName_Asc":
-                    f.playerInfo = f.playerInfo.OrderBy(x => x.Surname).ToList();
+                    sortBy = "last";
+                    f.playerInfo = playerM.GetPlayersInfo(sortBy, 0, out error);
                     break;
                 case "sName_Desc":
-                    f.playerInfo = f.playerInfo.OrderByDescending(x => x.Surname).ToList();
+                    sortBy = "last";
+                    f.playerInfo = playerM.GetPlayersInfo(sortBy, 1, out error);
                     break;
                 case "fNameSort_Desc":
-                    f.playerInfo = f.playerInfo.OrderByDescending(x => x.FirstName).ToList();
+                    sortBy = "first";
+                    f.playerInfo = playerM.GetPlayersInfo(sortBy, 1, out error);
                     break;
                 default:
-                    f.playerInfo = f.playerInfo.OrderBy(x => x.FirstName).ToList();
+                    sortBy = "first";
+                    f.playerInfo = playerM.GetPlayersInfo(sortBy, 0, out error);
                     break;
             }
-           // f.playerInfo = f.playerInfo.OrderBy(x => x.Surname).ToList();
+            
             ViewBag.error ="player: "+ error + " team: "+ tError;
             return View(f);
         }
+        
+        // Handle search and filter
         [HttpPost]
         public IActionResult Players(int team,string search, int filter, string type,string sortOrder)
         {
@@ -107,7 +126,7 @@ namespace PremierRosters.Controllers
             f.SpPl = null;
             if (String.IsNullOrEmpty(search) || team == -1)
             {
-                if (team == -1) f.playerInfo = pm.GetPlayersInfo(out error);
+                if (team == -1) f.playerInfo = pm.GetPlayersInfo("first",0,out error);
                 else f.playerInfo = pm.GetPlayersInfo(team, out error);
                 
             }
@@ -126,6 +145,8 @@ namespace PremierRosters.Controllers
             
             return View(f);
         }
+        
+        // Get data for player to eventually delete
         [HttpGet]
         public IActionResult Delete(int id)
         {
@@ -137,6 +158,7 @@ namespace PremierRosters.Controllers
             return View(pi);
         }
         
+        // Delete player from database
         [HttpPost]
         public IActionResult Delete(PlayerInfo pi)
         {
@@ -148,7 +170,8 @@ namespace PremierRosters.Controllers
             else
             return View(pi);
         }
-
+        
+        // Get data for player to edit
         [HttpGet]
         public IActionResult Edit(int id)
         {
@@ -163,6 +186,8 @@ namespace PremierRosters.Controllers
             ViewBag.error = error;
             return View(md);
         }
+        
+        // Update player information in the database
         [HttpPost]
         public IActionResult Edit(MainModell main)
         {
@@ -176,6 +201,8 @@ namespace PremierRosters.Controllers
             else
                 return View(main);
         }
+        
+        // Get sponsors and the players they sponsor
         public IActionResult Sponsors()
         {
             PlayerMethods pm = new PlayerMethods();
@@ -190,13 +217,15 @@ namespace PremierRosters.Controllers
 
             return View(si);
         }
+        
+        // Start to add sponsor to player - picks sponsor
         [HttpGet]
         public IActionResult AddSponsor()
         {
             PlayerMethods pm = new PlayerMethods();
             Filter filter = new Filter
             {
-                playerInfo = pm.GetPlayersInfo(out string pError),
+                playerInfo = pm.GetPlayersInfo("last",0,out string pError),
                 sponsors = pm.GetSponsors(out string sError),
                 teamInfo = null,
                 SpPl = new PlayerSponsorBy()
@@ -205,12 +234,15 @@ namespace PremierRosters.Controllers
             ViewBag.error = reError;
             return View(filter);
         }
+        
+        // With given sponsor check for already sponsored players
+        // Remove players from list - send list to view
         [HttpPost]
         public IActionResult AddPlayerToSp(int SponsorID)
         {
             PlayerMethods pm = new PlayerMethods();
             PlayerSponsorBy player = new PlayerSponsorBy();
-            List<PlayerInfo> players = pm.GetPlayersInfo(out string pError);
+            List<PlayerInfo> players = pm.GetPlayersInfo("last",0,out string pError);
             Filter filter = new Filter
             {
                 sponsors = pm.GetSponsors(out string sError),
@@ -236,7 +268,8 @@ namespace PremierRosters.Controllers
             ViewData["ID"] = SponsorID;
             return View(filter);
         }
-
+        
+        // Get sponsor and player to create relation in database
         [HttpPost]
         public IActionResult CreateRelation(Filter filter)
         {
@@ -251,6 +284,8 @@ namespace PremierRosters.Controllers
             else
                 return View();
         }
+
+        // Get player details
         [HttpGet]
         public IActionResult Details(int id)
         {

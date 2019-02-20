@@ -25,11 +25,24 @@
                 @Html.DisplayFor(modelItem => item.Name)
             </td>
             <td>
-                @foreach (KeyValuePair<string, int> keyValue in item.Players)
-                {
-                    int i = keyValue.Value;
-                    <a asp-action="Details" asp-route-id="@i"> @keyValue.Key</a>
+                @{
+                    var last = item.Players.Last();
+                    foreach (KeyValuePair<string, int> keyValue in item.Players)
+                    {
+                        int i = keyValue.Value;
+                        if (keyValue.Equals(last))
+                        {
+                            <a asp-action="Details" asp-route-id="@i"> @keyValue.Key</a>
+
+                        }
+                        else
+                        {
+                            <a asp-action="Details" asp-route-id="@i"> @keyValue.Key</a> @Html.Raw(" | ");
+
+                        }
+                    }
                 }
+
             </td>
 
         </tr>

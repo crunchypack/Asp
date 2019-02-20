@@ -50,7 +50,7 @@ namespace PremierRosters.Models
         }
         
         // Get all players
-        public List<PlayerInfo> GetPlayersInfo(out string error)
+        public List<PlayerInfo> GetPlayersInfo(string sortBy, int desc,out string error)
         {
             // SQL Connection created
             SqlConnection sConnection = new SqlConnection
@@ -59,9 +59,11 @@ namespace PremierRosters.Models
             };
 
             // Query for getting teams
-            String sqlQuery = "SELECT Pl_ID AS ID, Pl_First_name AS [First name], Pl_Surname AS Surname, Pl_Position AS Position, Te_Name  AS Team From Tbl_Player INNER JOIN Tbl_Team ON Te_ID = Pl_Team";
+            String sqlQuery = "spGetPlayers @sortBy, @desc";
             SqlCommand sCommand = new SqlCommand(sqlQuery, sConnection);
 
+            sCommand.Parameters.Add("sortBy", SqlDbType.VarChar, 10).Value = sortBy;
+            sCommand.Parameters.Add("desc", SqlDbType.Int).Value = desc;
             SqlDataReader read = null;
             List<PlayerInfo> playerList= new List<PlayerInfo>();
 

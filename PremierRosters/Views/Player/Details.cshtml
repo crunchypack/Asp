@@ -44,23 +44,12 @@
             @Html.DisplayNameFor(model => model.Team)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Team)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TeamString)
-        </dt>
-        <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.TeamString)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ID)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ID)
-        </dd>
+
     </dl>
 </div>
 <div>
     @Html.ActionLink("Edit", "Edit", new { id = Model.ID }) |
-    <a asp-action="Players">Back to List</a>
+    <a asp-action="Sponsors">Back to List</a>
 </div>
