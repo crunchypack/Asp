@@ -12,7 +12,7 @@ namespace PremierRosters.Controllers
     {
         public IActionResult Index()
         {
-            return View();
+            return RedirectToAction("Players", "Player");
         }
 
         public IActionResult Privacy()

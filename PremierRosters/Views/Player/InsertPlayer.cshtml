@@ -1,7 +1,10 @@
-﻿@model PremierRosters.Models.MainModell
+﻿@using PremierRosters.Extentions
+@model PremierRosters.Models.MainModell
 
 @{
     ViewData["Title"] = "Insert Player";
+    string teamUser = User.GetTeam();
+    
 }
 
 <h1>InsertPlayer</h1>
@@ -39,10 +42,13 @@
             </div>
             <div class="form-group">
                 <label asp-for="playerInfo.Team" class="control-label"></label>
-                <select asp-for="playerInfo.Team" class="form-control" >
-                    @foreach(PremierRosters.Models.TeamInfo team in Model.teamInfo)
+                <select asp-for="playerInfo.Team" class="form-control">
+                    @foreach (PremierRosters.Models.TeamInfo team in Model.teamInfo)
                     {
-                        <option value="@team.ID">@Html.DisplayFor(modelItem => team.Name)</option>
+                        if (teamUser == team.Name || teamUser == "All" || User.IsInRole("Admin"))
+                        {
+                            <option value="@team.ID">@Html.DisplayFor(modelItem => team.Name)</option>
+                        }
                     }
                 </select>
                 <span asp-validation-for="playerInfo.Team" class="text-danger"></span>

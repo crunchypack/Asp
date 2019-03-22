@@ -15,40 +15,62 @@
             <th>
                 Players
             </th>
+            <th></th>
 
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @{
-                    var last = item.Players.Last();
-                    foreach (KeyValuePair<string, int> keyValue in item.Players)
-                    {
-                        int i = keyValue.Value;
-                        if (keyValue.Equals(last))
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                <td>
+                    @{
+                        var last = new KeyValuePair<string, int>();
+                        bool player = false;
+                        if (item.Players.FirstOrDefault().Key != null)
                         {
-                            <a asp-action="Details" asp-route-id="@i"> @keyValue.Key</a>
-
+                            last = item.Players.Last();
+                            player = true;
                         }
-                        else
-                        {
-                            <a asp-action="Details" asp-route-id="@i"> @keyValue.Key</a> @Html.Raw(" | ");
 
+
+                        foreach (KeyValuePair<string, int> keyValue in item.Players)
+                        {
+                            int i = keyValue.Value;
+                            if (keyValue.Equals(last))
+                            {
+                                <a asp-action="Details" asp-route-id="@i"> @keyValue.Key</a>
+
+                            }
+                            else
+                            {
+                                <a asp-action="Details" asp-route-id="@i"> @keyValue.Key</a> @Html.Raw(" | ");
+
+                            }
                         }
                     }
-                }
 
-            </td>
+                </td>
+                <td>
+                    @{
+                        if (player && User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+                        {
+                            @Html.ActionLink("Delete", "DeleteSp", new { id = item.ID })
+                        }
+                    }
 
-        </tr>
-}
+                </td>
+            </tr>
+        }
+
     </tbody>
 </table>
-<p>
-    <a asp-action="AddSponsor">Add sponsor to player</a>
-</p>
+@if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+{
+    <p>
+        <a asp-action="AddSponsor">Add sponsor to player</a>
+    </p>
+}

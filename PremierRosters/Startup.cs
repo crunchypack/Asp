@@ -6,9 +6,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PremierRosters.Areas.Identity.Data;
+using PremierRosters.Models;
 
 namespace PremierRosters
 {
@@ -30,13 +34,13 @@ namespace PremierRosters
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
-
-
+            
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, 
+            IHostingEnvironment env, PremierRostersContext context, RoleManager<PremierRole> roleManager, UserManager<PremierUser> userManager)
         {
             if (env.IsDevelopment())
             {
@@ -51,6 +55,7 @@ namespace PremierRosters
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+            app.UseAuthentication();
             app.UseCookiePolicy();
 
             app.UseMvc(routes =>
@@ -59,6 +64,8 @@ namespace PremierRosters
                     name: "default",
                     template: "{controller=Player}/{action=Players}/{id?}");
             });
+
+           StartData.Initialize(context, userManager, roleManager).Wait();
         }
     }
 }

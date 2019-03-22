@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PremierRosters.Models;
+using PremierRosters.Extentions;
 
 namespace PremierRosters.Controllers
 {
@@ -11,6 +13,7 @@ namespace PremierRosters.Controllers
     {
         // Create player form
         [HttpGet]
+        [Authorize]
         public IActionResult InsertPlayer()
         {
             TeamMethods tm = new TeamMethods();
@@ -19,6 +22,7 @@ namespace PremierRosters.Controllers
                 teamInfo = tm.GetTeams(out string error)
             };
             
+            
             ViewBag.error = error;
 
             return View(main);
@@ -26,6 +30,7 @@ namespace PremierRosters.Controllers
         
         // Get data to insert player to database
         [HttpPost]
+        [Authorize]
         public IActionResult InsertPlayer(MainModell main)
         {
             PlayerInfo player = new PlayerInfo();
@@ -63,7 +68,7 @@ namespace PremierRosters.Controllers
             Filter f = new Filter
             {
                 teamInfo = tm.GetTeams(out string tError),
-                sponsors = playerM.GetSponsors(out string sError),
+                sponsors = null,
                 SpPl = null
             };
             // Handle click on links to sort 
@@ -77,6 +82,7 @@ namespace PremierRosters.Controllers
                 case "Pos_Asc":
                     sortBy = "pos";
                     f.playerInfo = playerM.GetPlayersInfo(sortBy, 0, out error);
+                    //f.playerInfo = f.playerInfo.OrderByDescending(x => x.Position).ToList();
                     break;
                 case "Pos_Desc":
                     sortBy = "pos";
@@ -114,7 +120,7 @@ namespace PremierRosters.Controllers
         
         // Handle search and filter
         [HttpPost]
-        public IActionResult Players(int team,string search, int filter, string type,string sortOrder)
+        public IActionResult Players(int team,string search, int filter, string type)
         {
             
             PlayerMethods pm = new PlayerMethods();
@@ -139,20 +145,21 @@ namespace PremierRosters.Controllers
             ViewData["Filter"] = filter;
             ViewData["Search"] = search;
             
-            //ViewData["Stuff"] = "Stuff: " + search + " " + type + " " + filter;
-            //ViewBag.error = "player: " + error + " team: " + tError + " ID: " + team;
-
-            
             return View(f);
         }
         
         // Get data for player to eventually delete
         [HttpGet]
+        [Authorize]
         public IActionResult Delete(int id)
         {
             PlayerMethods pm = new PlayerMethods();
             PlayerInfo pi = new PlayerInfo();
             pi = pm.GetPlayer(id, out string error);
+            if (User.GetTeam() !=pi.TeamString && !User.IsInRole("Admin"))
+            {
+                return RedirectToAction("Players");
+            }
             ViewData["ID"] = id;
             ViewBag.error = error;
             return View(pi);
@@ -160,6 +167,7 @@ namespace PremierRosters.Controllers
         
         // Delete player from database
         [HttpPost]
+        [Authorize]
         public IActionResult Delete(PlayerInfo pi)
         {
             PlayerMethods pm = new PlayerMethods();
@@ -173,6 +181,7 @@ namespace PremierRosters.Controllers
         
         // Get data for player to edit
         [HttpGet]
+        [Authorize]
         public IActionResult Edit(int id)
         {
             PlayerMethods pm = new PlayerMethods();
@@ -182,6 +191,10 @@ namespace PremierRosters.Controllers
                 teamInfo = tm.GetTeams(out string tError),
                 playerInfo = pm.GetPlayer(id, out string error)
             };
+            if (User.GetTeam() != md.playerInfo.TeamString && !User.IsInRole("Admin"))
+            {
+                return RedirectToAction("Players");
+            }
             ViewData["ID"] = id;
             ViewBag.error = error;
             return View(md);
@@ -189,6 +202,7 @@ namespace PremierRosters.Controllers
         
         // Update player information in the database
         [HttpPost]
+        [Authorize]
         public IActionResult Edit(MainModell main)
         {
             PlayerMethods pm = new PlayerMethods();
@@ -220,6 +234,7 @@ namespace PremierRosters.Controllers
         
         // Start to add sponsor to player - picks sponsor
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public IActionResult AddSponsor()
         {
             PlayerMethods pm = new PlayerMethods();
@@ -230,14 +245,15 @@ namespace PremierRosters.Controllers
                 teamInfo = null,
                 SpPl = new PlayerSponsorBy()
             };
-            filter.SpPl.SponsoredBy = pm.GetRelations(out string reError);
-            ViewBag.error = reError;
+           // filter.SpPl.SponsoredBy = pm.GetRelations(out string reError);
+            ViewBag.error = pError;
             return View(filter);
         }
         
         // With given sponsor check for already sponsored players
         // Remove players from list - send list to view
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public IActionResult AddPlayerToSp(int SponsorID)
         {
             PlayerMethods pm = new PlayerMethods();
@@ -271,6 +287,7 @@ namespace PremierRosters.Controllers
         
         // Get sponsor and player to create relation in database
         [HttpPost]
+        [Authorize(Roles ="Admin")]
         public IActionResult CreateRelation(Filter filter)
         {
             filter.playerInfo = null;
@@ -284,7 +301,37 @@ namespace PremierRosters.Controllers
             else
                 return View();
         }
+        // Delete player - sponsor relation
+        [HttpGet]
+        [Authorize(Roles = "Admin")]
+        public IActionResult DeleteSp(int id)
+        {
+            PlayerMethods pm = new PlayerMethods();
+            SponsorInfo si = new SponsorInfo();
+            si = pm.GetSponsor(id,out string error);
+            si.Players = pm.GetSponsorsPlayers(id, out string error2);
+            
+            ViewBag.error = error;
 
+            return View(si);
+        }
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public IActionResult DeleteSp(int playerID, int sponsorID)
+        {
+            PlayerMethods pm = new PlayerMethods();
+            int i = pm.RemoveSpRelation(playerID, sponsorID, out string error3);
+
+            SponsorInfo si = new SponsorInfo();
+
+
+            si = pm.GetSponsor(sponsorID, out string error);
+            si.Players = pm.GetSponsorsPlayers(sponsorID, out string error2);
+            ViewBag.error = error + "\n"+ error2 + "\n" + error3;
+            ViewBag.Data = "Player ID: " + playerID + "\nSponsor ID: " + sponsorID;
+            if (i == 1) return RedirectToAction("Sponsors");
+            else return View(si);
+        }
         // Get player details
         [HttpGet]
         public IActionResult Details(int id)

@@ -19,7 +19,8 @@ namespace PremierRosters.Models
             sqlConnection.ConnectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Fotboll;Integrated Security=True";
 
             // Query for inserting Player
-            String sqlQuery = "INSERT INTO Tbl_Player(Pl_First_name, Pl_Surname, Pl_Jersey, Pl_Position, Pl_Birthyear, Pl_Team) VALUES(@first,@last,@jersey,@pos,@birth,@team)";
+            String sqlQuery = "INSERT INTO Tbl_Player(Pl_First_name, Pl_Surname, Pl_Jersey, "
+                +"Pl_Position, Pl_Birthyear, Pl_Team) VALUES(@first,@last,@jersey,@pos,@birth,@team)";
             SqlCommand sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
 
             sqlCommand.Parameters.Add("first", SqlDbType.NVarChar, 20).Value = pi.FirstName;
@@ -253,7 +254,14 @@ namespace PremierRosters.Models
             search = "%" + search + "%";
             if (id > 0)
             {
-                if(type == "Name")
+                if (type == "Name")
+                {
+                    sqlQuery = "SELECT Pl_ID AS ID, Pl_First_name AS [First name], Pl_Surname AS Surname, Pl_Position AS Position, " +
+                        "Te_Name  AS Team From Tbl_Player INNER JOIN Tbl_Team ON Te_ID = Pl_Team WHERE Pl_Team = @Id AND Pl_Surname LIKE '%@Search%';";
+                                                                                                                                        //%'@Search'% funkar inte heller                  
+
+                }
+                if (type == "Name")
                 {
                     sqlQuery = "SELECT Pl_ID AS ID, Pl_First_name AS [First name], Pl_Surname AS Surname, Pl_Position AS Position, "+
                         "Te_Name  AS Team From Tbl_Player INNER JOIN Tbl_Team ON Te_ID = Pl_Team WHERE Pl_Team = @Id AND Pl_Surname LIKE @Search;";
@@ -263,9 +271,8 @@ namespace PremierRosters.Models
                 {
                     sqlQuery = "SELECT Pl_ID AS ID, Pl_First_name AS [First name], Pl_Surname AS Surname, Pl_Position AS Position, "+
                         "Te_Name  AS Team From Tbl_Player INNER JOIN Tbl_Team ON Te_ID = Pl_Team WHERE Pl_Team = @Id AND Pl_Position LIKE @Search;";
-                    
-
                 }
+
                 sCommand = new SqlCommand(sqlQuery, sConnection);
                 
                 sCommand.Parameters.Add("Id", SqlDbType.Int).Value = id;
@@ -411,6 +418,52 @@ namespace PremierRosters.Models
             }
         }
 
+        // Get one sponsor
+        public SponsorInfo GetSponsor(int id, out string error)
+        {
+            // SQL Connection created
+            SqlConnection sConnection = new SqlConnection
+            {
+                ConnectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Fotboll;Integrated Security=True"
+            };
+
+            // Query for getting teams
+            String sqlQuery = "SELECT Sp_Name AS Name, Sp_ID AS ID FROM Tbl_Sponsor WHERE Sp_ID = @id";
+            SqlCommand sCommand = new SqlCommand(sqlQuery, sConnection);
+            sCommand.Parameters.Add("id", SqlDbType.Int).Value = id;
+
+            SqlDataReader read = null;
+            SponsorInfo sponsors = new SponsorInfo();
+
+            error = "";
+            try
+            {
+                sConnection.Open();
+                read = sCommand.ExecuteReader();
+
+                while (read.Read())
+                {
+                    
+                    sponsors.Name = read["Name"].ToString();
+                    sponsors.ID = Convert.ToInt32(read["ID"]);
+                    
+                }
+                read.Close();
+                return sponsors;
+            }
+            catch (Exception e)
+            {
+                
+                sponsors.Name = "Error";
+               
+                error = e.Message;
+                return sponsors;
+            }
+            finally
+            {
+                sConnection.Close();
+            }
+        }
         // Get all players sponsored by sponsor with id
         public List<KeyValuePair<string, int>> GetSponsorsPlayers(int id,out string error)
         {
@@ -522,6 +575,39 @@ namespace PremierRosters.Models
                 i = sqlCommand.ExecuteNonQuery();
                 if (i == 1) { error = ""; }
                 else { error = "Could not add relation"; }
+                return (i);
+            }
+            catch (Exception e)
+            {
+                error = e.Message;
+                return 0;
+            }
+            finally
+            {
+                sqlConnection.Close();
+            }
+        }
+
+        public int RemoveSpRelation(int id, int sid, out string error)
+        {
+            // SQL Connection created
+            SqlConnection sqlConnection = new SqlConnection();
+            sqlConnection.ConnectionString = "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=Fotboll;Integrated Security=True";
+
+            // Query for inserting Player
+            String sqlQuery = "DELETE FROM Tbl_Sponsors WHERE Sps_Player = @id AND Sps_Sponsor = @sid";
+            SqlCommand sqlCommand = new SqlCommand(sqlQuery, sqlConnection);
+
+            sqlCommand.Parameters.Add("id", SqlDbType.Int).Value = id;
+            sqlCommand.Parameters.Add("sid", SqlDbType.Int).Value = sid;
+
+            try
+            {
+                sqlConnection.Open();
+                int i = 0;
+                i = sqlCommand.ExecuteNonQuery();
+                if (i == 1) { error = ""; }
+                else { error = "Relation not Deleted"; }
                 return (i);
             }
             catch (Exception e)

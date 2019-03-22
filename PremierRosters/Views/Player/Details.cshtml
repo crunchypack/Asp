@@ -1,4 +1,5 @@
 ﻿@model PremierRosters.Models.PlayerInfo
+@using PremierRosters.Extentions
 
 @{
     ViewData["Title"] = "Details";
@@ -50,6 +51,12 @@
     </dl>
 </div>
 <div>
-    @Html.ActionLink("Edit", "Edit", new { id = Model.ID }) |
-    <a asp-action="Sponsors">Back to List</a>
+    @if (User.Identity.IsAuthenticated && User.GetTeam() == Model.TeamString)
+    {
+    <span>
+        @Html.ActionLink("Edit", "Edit", new { id = Model.ID })  |
+    </span>
+    }
+
+    <a asp-action="Players">Back to List</a>
 </div>

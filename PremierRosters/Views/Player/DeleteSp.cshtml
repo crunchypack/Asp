@@ -1,0 +1,26 @@
+﻿@model PremierRosters.Models.SponsorInfo
+
+@{
+    ViewData["Title"] = "Delete player from sponsor";
+}
+
+<h1>Delete player from sponsor</h1>
+<p>@ViewBag.Data</p>
+<p>@ViewBag.error</p>
+<h3>@Html.DisplayFor(model => model.Name)</h3>
+<div style="margin: 5% 0">
+    
+
+    <h4>Pick the player </h4>
+    <form asp-action="DeleteSp" onsubmit="return confirm('Are you sure ?');">
+        <select class="form-control" name="playerID">
+            @foreach (KeyValuePair<string,int> player in Model.Players)
+            {
+                <option value="@player.Value">@player.Key</option>
+            }
+        </select>
+        <input type="number" value="@Model.ID" name="sponsorID" style="visibility:hidden"/><br />
+        <input type="submit" value="Delete" class="btn btn-danger" /> <br />
+        <a asp-action="Sponsors">Back to List</a>
+    </form>
+</div>
