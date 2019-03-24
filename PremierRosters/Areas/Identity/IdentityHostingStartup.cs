@@ -19,10 +19,15 @@ namespace PremierRosters.Areas.Identity
                     options.UseSqlServer(
                         context.Configuration.GetConnectionString("PremierRostersContextConnection")));
 
+                //services.AddDefaultIdentity<IdentityUser>()
+                //   .AddEntityFrameworkStores<PremierRostersContext>();
+
                 services.AddIdentity<PremierUser,PremierRole>()
                     .AddEntityFrameworkStores<PremierRostersContext>()
                     .AddDefaultTokenProviders()
                     .AddDefaultUI();
+
+               
 
             });
         }

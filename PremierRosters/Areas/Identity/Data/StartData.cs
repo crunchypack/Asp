@@ -13,8 +13,10 @@ namespace PremierRosters.Areas.Identity.Data
                              UserManager<PremierUser> userManager,
                              RoleManager<PremierRole> roleManager)
         {
+            // Databasen existerar
             context.Database.EnsureCreated();
 
+            // Deklarering av variabler
             String adminId1 = "";
             String adminId2 = "";
 
@@ -25,7 +27,7 @@ namespace PremierRosters.Areas.Identity.Data
             string desc2 = "This is the headcoach role";
 
             string password = "Qwert9=";
-
+            // Skapa roller om de inte finns 
             if (await roleManager.FindByNameAsync(role1) == null)
             {
                 await roleManager.CreateAsync(new PremierRole(role1, desc1, DateTime.Now));
@@ -34,7 +36,7 @@ namespace PremierRosters.Areas.Identity.Data
             {
                 await roleManager.CreateAsync(new PremierRole(role2, desc2, DateTime.Now));
             }
-
+            // Skapa användare om den inte finns
             if (await userManager.FindByNameAsync("Admin@admin.se") == null)
             {
                 var user = new PremierUser
@@ -45,7 +47,7 @@ namespace PremierRosters.Areas.Identity.Data
                     Team = "All"
 
                 };
-
+                // Tilldela lösenord och roll
                 var result = await userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
